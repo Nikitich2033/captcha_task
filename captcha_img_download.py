@@ -1,33 +1,50 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import time
+import os
 
 # URL главной страницы
 base_url = "http://services.fms.gov.ru/info-service.htm?sid=2000"
 
-# Ссылка на изображение капчи
-captcha_url = "http://services.fms.gov.ru/services/captcha.jpg"
+# Количество изображений для загрузки
+num_images = 100
 
-# Создаем сессию
-session = requests.Session()
+# Создайте директорию для изображений, если она еще не существует
+os.makedirs('captcha_imgs', exist_ok=True)
 
-# Отправляем GET запрос на главную страницу
-response = session.get(base_url)
+# Счетчик успешно сохраненных изображений
+saved_images = 0
 
-# Создаем объект BeautifulSoup
-soup = BeautifulSoup(response.text, 'html.parser')
+# Цикл для загрузки каждого изображения
+while saved_images < num_images:
+    # Создать новую сессию для каждой загрузки изображения
+    with requests.Session() as session:
+        # Отправить GET-запрос на главную страницу
+        response = session.get(base_url)
 
-# Находим изображение капчи по id
-captcha_image = soup.find('img', {'id': 'captcha_image'})
+        # Создать объект BeautifulSoup
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-# Если изображение найдено
-if captcha_image:
-    # Получаем абсолютный URL изображения
-    image_url = urljoin(base_url, captcha_image['src'])
+        # Найти изображение капчи по id
+        captcha_image = soup.find('img', {'id': 'captcha_image'})
 
-    # Отправляем GET запрос к изображению
-    image_response = session.get(image_url)
+        # Если изображение найдено
+        if captcha_image:
+            # Получить абсолютный URL изображения
+            image_url = urljoin(base_url, captcha_image['src'])
 
-    # Сохраняем изображение
-    with open('captcha.jpg', 'wb') as f:
-        f.write(image_response.content)
+            # Отправить GET-запрос к изображению
+            image_response = session.get(image_url)
+
+            # Сохранить изображение
+            with open(f'captcha_imgs/captcha_{saved_images}.jpg', 'wb') as f:
+                f.write(image_response.content)
+
+            # Увеличиваем счетчик сохраненных изображений
+            saved_images += 1
+        else:
+            print("Изображение капчи не найдено")
+
+    # Подождите секунду перед следующим запросом
+    time.sleep(1)
