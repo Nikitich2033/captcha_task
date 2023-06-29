@@ -1,35 +1,38 @@
 import cv2
 import numpy as np
 
-# Загрузка изображения
-image = cv2.imread('captcha.jpg')
+# Load the image
+im = cv2.imread('captcha.jpg')
+assert im is not None, "File could not be read. Please check with os.path.exists()"
 
-# Конвертация изображения в оттенки серого
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+# Convert to grayscale
+imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
-# Применение пороговой функции
-_, thresh = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+# Apply thresholding
+_, thresh = cv2.threshold(imgray, 127, 255, cv2.THRESH_BINARY_INV)
 
-# Применение морфологической операции дилатация
-kernel = np.ones((2,2),np.uint8)
-dilated = cv2.dilate(thresh, kernel, iterations = 1)
+# Apply morphological operations
+kernel = np.ones((3,3),np.uint8)
+thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
 
-# Нахождение контуров на изображении
-contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+# Find contours
+contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-digit_images = []
-
-# Для каждого контура
-for contour in contours:
-    # Нахождение прямоугольника, описывающего контур
+# Iterate through each contour found
+for i, contour in enumerate(contours):
+    # Get bounding box for each contour
     x, y, w, h = cv2.boundingRect(contour)
 
-    # Выделение ROI (region of interest)
-    roi = gray[y:y+h, x:x+w]
+    # Add padding around the bounding box
+    padding = 5
+    x = max(0, x - padding)
+    y = max(0, y - padding)
+    w = min(im.shape[1], x + w + padding) - x
+    h = min(im.shape[0], y + h + padding) - y
 
-    # Сохранение ROI в список
-    digit_images.append(roi)
+    # Extract ROI
+    roi = imgray[y:y+h, x:x+w]
 
-# Сохранение полученных изображений
-for i, digit_image in enumerate(digit_images):
-    cv2.imwrite(f'digit_{i}.jpg', digit_image)
+    # Save each ROI as a separate image
+    cv2.imwrite(f'digit_{i}.png', roi)
