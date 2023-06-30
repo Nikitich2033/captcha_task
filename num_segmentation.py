@@ -2,27 +2,19 @@ import cv2
 import numpy as np
 
 # Load the image
-im = cv2.imread('captcha_0.jpg')
+im = cv2.imread('captcha_imgs/captcha_0.jpg')
 assert im is not None, "File could not be read. Please check with os.path.exists()"
-# cv2.imshow("1", np.array(im))
-# cv2.waitKey(0)
 
 image = cv2.GaussianBlur(im, (3, 3),0)
 ret, image = cv2.threshold(image, 90, 255, cv2.THRESH_BINARY)
 
 image = cv2.dilate(image, np.ones((1, 3), np.uint8))
-cv2.imshow("1", np.array(image))
-cv2.waitKey(0)
-
 image = cv2.erode(image, np.ones((2,2), np.uint8))
-cv2.imshow("1", np.array(image))
-cv2.waitKey(0)
+
 
 im = image
-# Convert to grayscale
 imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-# cv2.imshow("1", np.array(imgray))
-# cv2.waitKey(0)
+
 # Apply thresholding
 _, thresh = cv2.threshold(imgray, 127, 255, cv2.THRESH_BINARY_INV)
 
@@ -37,7 +29,7 @@ thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
 # Find contours
 contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-imgray = cv2.imread('captcha_0.jpg')
+# imgray = cv2.imread('captcha_0.jpg')
 img_counter = 0 # initialize image counter
 
 # Iterate through each contour found
