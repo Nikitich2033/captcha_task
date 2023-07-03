@@ -39,7 +39,7 @@ for file in files:
         confidence = int(data['conf'][i])
         
         # Check if confidence level is above 60
-        if confidence > 60:
+        if confidence > 85 and len(digit) == 1:
             # Create the digits directory if it doesn't exist
             if not os.path.exists(digits_dir):
                 os.makedirs(digits_dir)

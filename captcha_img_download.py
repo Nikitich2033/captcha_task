@@ -8,7 +8,7 @@ import os
 base_url = "http://services.fms.gov.ru/info-service.htm?sid=2000"
 
 # Количество изображений для загрузки
-num_images = 400
+num_images = 1000
 
 # Создайте директорию для изображений, если она еще не существует
 os.makedirs('captcha_imgs', exist_ok=True)
