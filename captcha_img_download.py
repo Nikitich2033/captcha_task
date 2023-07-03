@@ -8,18 +8,19 @@ import os
 base_url = "http://services.fms.gov.ru/info-service.htm?sid=2000"
 
 # Количество изображений для загрузки
-num_images = 100
+num_images = 400
 
 # Создайте директорию для изображений, если она еще не существует
 os.makedirs('captcha_imgs', exist_ok=True)
 
-# Счетчик успешно сохраненных изображений
-saved_images = 0
+# Получить список уже сохраненных изображений
+saved_images = len(os.listdir('captcha_imgs'))
 
 # Цикл для загрузки каждого изображения
 while saved_images < num_images:
-    # Создать новую сессию для каждой загрузки изображения
+# Создать новую сессию для каждой загрузки изображения
     with requests.Session() as session:
+        
         # Отправить GET-запрос на главную страницу
         response = session.get(base_url)
 
@@ -37,7 +38,7 @@ while saved_images < num_images:
             # Отправить GET-запрос к изображению
             image_response = session.get(image_url)
 
-            # Сохранить изображение
+            # Сохранить изображение с новым именем, увеличивая счетчик сохраненных изображений
             with open(f'captcha_imgs/captcha_{saved_images}.jpg', 'wb') as f:
                 f.write(image_response.content)
 

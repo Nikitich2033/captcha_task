@@ -36,7 +36,7 @@ for  i in range(6):
     # cv2.rectangle(dilation, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
     # save each character to a separate image
-    digit = dilation[y:y+h, x:x+w]
+    digit = img[y:y+h, x:x+w]
 
     # Add 5-pixel white padding
     digit = cv2.copyMakeBorder(digit, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[255, 255, 255])
