@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 # Prepare output directory
-os.makedirs("output", exist_ok=True)
+os.makedirs("single_digits", exist_ok=True)
 
 # Get a list of all image files in the captcha_imgs folder
 captcha_dir = "captcha_imgs"
@@ -42,13 +42,13 @@ for image_file in image_files:
         # Get the bounding rect
 
         # Save each character to a separate image
-        digit = img[y:y+h, x:x+w]
+        digit = dilation[y:y+h, x:x+w]
 
         # Add 5-pixel white padding
         digit = cv2.copyMakeBorder(digit, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
         # Save the character image
-        output_path = os.path.join("output", f"{image_file}_{i}.png")
+        output_path = os.path.join("single_digits", f"{image_file}_{i}.png")
         cv2.imwrite(output_path, digit)
 
         x += w
