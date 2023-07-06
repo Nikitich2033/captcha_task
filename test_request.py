@@ -4,13 +4,12 @@ import base64
 # URL of the server
 url = 'http://localhost:5000/api/captcha/solve'
 
-# Load the image and encode it to base64
-with open('captcha_imgs/captcha_0.jpg', 'rb') as file:
-    image_data = file.read()
-    encoded_image = base64.b64encode(image_data).decode('utf-8')
+# Read the image file and encode it to base64
+with open('captcha_imgs/captcha_4.jpg', 'rb') as file:
+    image_data = base64.b64encode(file.read()).decode('utf-8')
 
 # Prepare the request payload
-payload = {'image': encoded_image}
+payload = {'image': image_data}
 
 # Send the POST request
 response = requests.post(url, json=payload)
@@ -18,6 +17,6 @@ response = requests.post(url, json=payload)
 # Check the response
 if response.status_code == 200:
     result = response.json()
-    print('Recognized text:', result['text'])
+    print('Recognized digits:', result['Recognised digits'])
 else:
     print('Error:', response.text)

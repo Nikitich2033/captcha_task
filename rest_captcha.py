@@ -12,25 +12,32 @@ app = Flask(__name__)
 mnist_model = load_model("mnist_model.h5")  
 
 def segment_img(input_img):
-    # Convert PIL Image to OpenCV BGR image
-    img = np.array(input_img.convert('RGB'))
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    
+    # Convert the PIL Image to a NumPy array
+    image_array = np.array(input_img)
 
-    # Image processing
-    # Convert to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # Обработка изображения
+    # Преобразование из RGB в оттенки серого
+    img = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
 
-    # Otsu's thresholding with Gaussian blur
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
-    th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Адаптивная бинаризация
+    th = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 17, 2)
 
-    kernel = np.ones((3, 3), np.uint8)
+    # Оцу-бинаризация
+    ret2, th2 = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Оцу-бинаризация с гауссовым размытием
+    blur = cv2.GaussianBlur(img, (5, 5), 0)
+    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    kernel = np.ones((3,3), np.uint8)
 
     dilation = cv2.dilate(th3, kernel, iterations=1)
 
     erosion = cv2.erode(dilation, kernel, iterations=1)
 
-    kernel = np.ones((3, 1), np.uint8)
+    kernel = np.ones((3,1), np.uint8)
     dilation = cv2.dilate(erosion, kernel, iterations=1)
 
     # Get individual letters
@@ -41,7 +48,7 @@ def segment_img(input_img):
 
         # Save each character as a separate image
         # Change dilation to img if you want to preserve the original color
-        digit = dilation[y:y + h, x:x + w]
+        digit = img[y:y + h, x:x + w]
 
         # Add a white border of 5 pixels
         digit = cv2.copyMakeBorder(digit, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[255, 255, 255])
@@ -73,9 +80,9 @@ def solve_captcha():
         
         recognized_text = ""
         for segment in segmented_images:
-            # # Preprocess the segment (using your preprocessing logic)
-            # preprocessed_segment = preprocess_image(segment)
-            
+            # Preprocess the segment
+            # Convert the PIL Image to a NumPy array
+            segment = np.array(segment)
             segment = cv2.resize(segment, (28, 28))
             segment = np.invert(np.array([segment]))
             
@@ -83,7 +90,7 @@ def solve_captcha():
             digit = mnist_model.predict(segment)
             
             # Append the recognized digit to the recognized text
-            recognized_text += str(digit)
+            recognized_text += str(np.argmax(digit))
         
         # Return the recognized text as the response
         return jsonify({'Recognised digits': recognized_text})
@@ -93,3 +100,5 @@ def solve_captcha():
         print('Error:', str(e))
         return jsonify({'error': 'Internal Server Error'}), 500
 
+if __name__ == '__main__':
+    app.run()
