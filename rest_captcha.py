@@ -48,7 +48,7 @@ def segment_img(input_img):
 
         # Save each character as a separate image
         # Change dilation to img if you want to preserve the original color
-        digit = dilation[y:y + h, x:x + w]
+        digit = img[y:y + h, x:x + w]
 
         # Add a white border of 5 pixels
         digit = cv2.copyMakeBorder(digit, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[255, 255, 255])

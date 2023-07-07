@@ -5,7 +5,7 @@ import base64
 url = 'http://localhost:5000/api/captcha/solve'
 
 # Read the image file and encode it to base64
-with open('captcha_imgs/captcha_8.jpg', 'rb') as file:
+with open('captcha_imgs/captcha_25.jpg', 'rb') as file:
     image_data = base64.b64encode(file.read()).decode('utf-8')
 
 # Prepare the request payload
