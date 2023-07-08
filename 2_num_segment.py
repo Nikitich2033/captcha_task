@@ -53,4 +53,3 @@ for image_file in image_files:
         cv2.imwrite(output_path, digit)
 
         x += w
-
