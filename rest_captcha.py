@@ -12,45 +12,33 @@ app = Flask(__name__)
 mnist_model = load_model("mnist_model.h5")  
 
 def segment_img(input_img):
-    
     # Convert the PIL Image to a NumPy array
     image_array = np.array(input_img)
-
     
-    # Обработка изображения
-    # Преобразование из RGB в оттенки серого
+    # Image processing
+    # Convert to grayscale
     img = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
-
-    # Адаптивная бинаризация
+    
+    # Adaptive thresholding
     th = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 17, 2)
 
-    # Оцу-бинаризация
-    ret2, th2 = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Otsu thresholding with Gaussian blur
+    blur = cv2.GaussianBlur(th, (5, 5), 0)
+    _, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    # Оцу-бинаризация с гауссовым размытием
-    blur = cv2.GaussianBlur(img, (5, 5), 0)
-    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    kernel = np.ones((3,3), np.uint8)
+    kernel = np.ones((3, 3), np.uint8)
 
     dilation = cv2.dilate(th3, kernel, iterations=1)
 
-    erosion = cv2.erode(dilation, kernel, iterations=1)
-
-    kernel = np.ones((3,1), np.uint8)
-    dilation = cv2.dilate(erosion, kernel, iterations=1)
 
     # Get individual letters
     x, y, w, h = 22, 10, 20, 38
     segments = []
     for i in range(6):
-        # Get the bounding rectangle
-
         # Save each character as a separate image
-        # Change dilation to img if you want to preserve the original color
-        digit = img[y:y + h, x:x + w]
+        digit = dilation[y:y + h, x:x + w]
 
-        # Add a white border of 5 pixels
+        # Add a white border of 8 pixels
         digit = cv2.copyMakeBorder(digit, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
         # Convert the digit to PIL Image
