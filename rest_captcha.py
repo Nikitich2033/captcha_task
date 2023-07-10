@@ -5,24 +5,23 @@ from flask import Flask, request, jsonify
 import base64
 from PIL import Image
 from io import BytesIO
-import base64
 
 app = Flask(__name__)
 
 mnist_model = load_model("mnist_model.h5")  
 
 def segment_img(input_img):
-    # Convert the PIL Image to a NumPy array
+    # Преобразование изображения PIL в массив NumPy
     image_array = np.array(input_img)
     
-    # Image processing
-    # Convert to grayscale
+    # Обработка изображения
+    # Преобразование в оттенки серого
     img = cv2.cvtColor(image_array, cv2.COLOR_BGR2GRAY)
     
-    # Adaptive thresholding
+    # Адаптивная бинаризация
     th = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 17, 2)
 
-    # Otsu thresholding with Gaussian blur
+    # Оцу-бинаризация с гауссовым размытием
     blur = cv2.GaussianBlur(th, (5, 5), 0)
     _, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
@@ -31,20 +30,20 @@ def segment_img(input_img):
     dilation = cv2.dilate(th3, kernel, iterations=1)
 
 
-    # Get individual letters
+    # Получение отдельных символов
     x, y, w, h = 22, 10, 20, 38
     segments = []
     for i in range(6):
-        # Save each character as a separate image
+        # Сохранение каждого символа в отдельное изображение
         digit = dilation[y:y + h, x:x + w]
 
-        # Add a white border of 8 pixels
+        # Добавление 8 пикселей белой рамки
         digit = cv2.copyMakeBorder(digit, 5, 5, 5, 5, cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
-        # Convert the digit to PIL Image
+        # Преобразование символа в объект PIL Image
         digit_pil = Image.fromarray(digit)
 
-        # Append the digit to the list of segments
+        # Добавление символа в список сегментов
         segments.append(digit_pil)
 
         x += w
@@ -55,36 +54,36 @@ def segment_img(input_img):
 @app.route('/api/captcha/solve', methods=['POST'])
 def solve_captcha():
     try:
-        # Get image data from the request
+        # Получение данных изображения из запроса
         data = request.json
         image_data = data['image']
         
-        # Decode image from base64 and create an Image object
+        # Декодирование изображения из base64 и создание объекта Image
         image_bytes = base64.b64decode(image_data)
         image = Image.open(BytesIO(image_bytes))
         
-        # Segment the image
+        # Сегментация изображения
         segmented_images = segment_img(image)
         
         recognized_text = ""
         for segment in segmented_images:
-            # Preprocess the segment
-            # Convert the PIL Image to a NumPy array
+            # Предобработка сегмента
+            # Преобразование изображения PIL в массив NumPy
             segment = np.array(segment)
             segment = cv2.resize(segment, (28, 28))
             segment = np.invert(np.array([segment]))
             
-            # Predict the digit using the pre-trained Keras MNIST model
+            # Предсказание цифры с использованием предварительно обученной модели Keras MNIST
             digit = mnist_model.predict(segment)
             
-            # Append the recognized digit to the recognized text
+            # Добавление распознанной цифры к распознанному тексту
             recognized_text += str(np.argmax(digit))
         
-        # Return the recognized text as the response
+        # Возврат распознанного текста в качестве ответа
         return jsonify({'Recognised digits': recognized_text})
     
     except Exception as e:
-        # Handle errors
+        # Обработка ошибок
         print('Error:', str(e))
         return jsonify({'error': 'Internal Server Error'}), 500
 
